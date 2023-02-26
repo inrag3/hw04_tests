@@ -8,7 +8,7 @@
   <h3>Всего постов: {{ profile.posts.count }}</h3>   
 
   {% for post in page_obj %}
-    {% include 'includes/post.html' %}
+    {% include 'posts/includes/post.html' %}
     {% if not forloop.last %} 
       <hr>
     {% endif %}
