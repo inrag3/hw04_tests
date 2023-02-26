@@ -74,6 +74,7 @@ class PostViewTest(TestCase):
                         'post_id': PostViewTest.post.id})
         response = self.authorized_client.get(route)
         post = response.context['post']
+        self.assertEqual(post.id, PostViewTest.post.id)
         self.assertEqual(post.text, PostViewTest.post.text)
         self.assertEqual(post.group.title, PostViewTest.group.title)
         self.assertEqual(post.author.username,
