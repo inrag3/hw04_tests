@@ -7,7 +7,7 @@ from yatube.settings import POSTS_PER_PAGE
 
 
 def pagination(request, list):
-    paginator = Paginator(list, 10)
+    paginator = Paginator(list, POSTS_PER_PAGE)
     page_number = request.GET.get('page')
     return paginator.get_page(page_number)
 
@@ -46,7 +46,6 @@ def profile(request, username):
 def post_detail(request, post_id):
     template = 'posts/post_detail.html'
     post = Post.objects.get(pk=post_id)
-    print(post.comments)
     context = {
         'post': post,
         'form': CommentForm(),
