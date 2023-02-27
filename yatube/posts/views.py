@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Post, Group, User
 from .forms import PostForm
 from django.contrib.auth.decorators import login_required
+from yatube.settings import POSTS_PER_PAGE
 
 
 def index(request):
@@ -82,6 +83,6 @@ def post_edit(request, post_id):
 
 
 def pagination(request, list):
-    paginator = Paginator(list, 10)
+    paginator = Paginator(list, POSTS_PER_PAGE)
     page_number = request.GET.get('page')
     return paginator.get_page(page_number)

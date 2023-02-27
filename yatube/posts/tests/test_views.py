@@ -3,6 +3,7 @@ from django.test import Client, TestCase
 from ..models import Group, Post
 from django.urls import reverse
 from ..forms import PostForm
+from yatube.settings import POSTS_PER_PAGE
 
 User = get_user_model()
 
@@ -103,22 +104,21 @@ class PaginatorViewsTest(TestCase):
             slug='test',
             description='Тестовое описание',
         )
-        cls.post = [
-            Post.objects.create(
-                text='Тестовый пост',
-                author=PaginatorViewsTest.user,
-                group=PaginatorViewsTest.group,
-            )
+        posts = [
+            Post(text='Тестовый пост',
+                 author=PaginatorViewsTest.user,
+                 group=PaginatorViewsTest.group)
             for _ in range(13)
         ]
+        cls.post = Post.objects.bulk_create(posts)
 
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
     def test_posts_pages_contains_necessary_records(self):
-        first_page = 10
-        second_page = 3
+        first_page = POSTS_PER_PAGE
+        second_page = Post.objects.count() - first_page
         pages_len = {
             reverse('posts:index'): first_page,
             reverse('posts:index') + '?page=2': second_page,
