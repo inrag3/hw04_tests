@@ -1,6 +1,6 @@
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post, Group, User
+from .models import Post, Group, User, Follow
 from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from yatube.settings import POSTS_PER_PAGE
@@ -34,12 +34,15 @@ def group_posts(request, slug):
 
 def profile(request, username):
     template = 'posts/profile.html'
-    profile = User.objects.get(username=username)
-    post_list = profile.posts.all()
+    author = User.objects.get(username=username)
+    post_list = author.posts.all()
+    following = author.following.filter(user__id=request.user.id).exists()
     context = {
-        'profile': profile,
+        'author': author,
         'page_obj': pagination(request, post_list),
+        'following': following,
     }
+    print(request.user)
     return render(request, template, context)
 
 
@@ -101,3 +104,34 @@ def add_comment(request, post_id):
         comment.post = post
         comment.save()
     return redirect('posts:post_detail', post_id=post_id)
+
+
+@login_required
+def follow_index(request):
+    template = 'posts/follow.html'
+    posts = Post.objects.filter(author__following__user=request.user)
+    context = {
+        'page_obj': pagination(request, posts)
+    }
+    return render(request, template, context)
+
+
+@login_required
+def profile_follow(request, username):
+    author = User.objects.get(username=username)
+    if request.user != author:
+        Follow.objects.get_or_create(
+            user=request.user,
+            author=author,
+        )
+    return redirect('posts:follow_index')
+
+
+@login_required
+def profile_unfollow(request, username):
+    author = User.objects.get(username=username)
+    Follow.objects.filter(
+        user=request.user,
+        author=author
+    ).delete()
+    return redirect('posts:follow_index')

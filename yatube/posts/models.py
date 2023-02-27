@@ -77,3 +77,19 @@ class Comment(models.Model):
     )
     text = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
+    )
+
+    def __str__(self) -> str:
+        return f'{self.user} is following {self.author}'
