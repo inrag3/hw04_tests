@@ -42,7 +42,6 @@ def profile(request, username):
         'page_obj': pagination(request, post_list),
         'following': following,
     }
-    print(request.user)
     return render(request, template, context)
 
 
