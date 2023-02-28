@@ -2,7 +2,7 @@ import shutil
 import tempfile
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
-from ..models import Post
+from ..models import Post, Comment
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
@@ -42,6 +42,7 @@ class PostFormTests(TestCase):
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
+        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
@@ -72,3 +73,33 @@ class PostFormTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count)
         self.assertEqual(str(Post.objects.get(id=PostFormTests.post.id)),
                          form_data['text'][:15])
+
+    def test_posts_unauthorized_user_cannot_create_comment(self):
+        post = PostFormTests.post
+        form_data = {
+            'post': post,
+            'text': 'Тестовый комментарий'
+        }
+        count = Comment.objects.count()
+        self.authorized_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': post.id}),
+            data=form_data,
+            follow=True
+        )
+        self.assertEqual(count + 1, Comment.objects.count())
+        self.assertIn(Comment.objects.get(pk=1), post.comments.all())
+
+    def test_posts_authorized_user_cannot_create_comment(self):
+        post = PostFormTests.post
+        form_data = {
+            'post': post,
+            'text': 'Тестовый комментарий'
+        }
+        count = Comment.objects.count()
+        self.guest_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': post.id}),
+            data=form_data,
+            follow=True
+        )
+        self.assertEqual(count, Comment.objects.count())
+        self.assertFalse(len(post.comments.all()))

@@ -3,7 +3,7 @@ import tempfile
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
-from ..models import Group, Post, Follow
+from ..models import Group, Post, Follow, Comment
 from django.urls import reverse
 from django.conf import settings
 from ..forms import PostForm
@@ -121,6 +121,23 @@ class PostViewTest(TestCase):
                         kwargs={'slug': PostViewTest.empty_group.slug})
         response = self.authorized_author_client.get(route)
         self.assertNotIn(PostViewTest.post, response.context['page_obj'])
+
+    def test_posts_post_has_comment(self):
+        post = PostViewTest.post
+        form_data = {
+            'post': post,
+            'text': 'Тестовый комментарий'
+        }
+        self.authorized_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': post.id}),
+            data=form_data,
+            follow=True
+        )
+        response = self.authorized_client.get(
+            reverse('posts:post_detail', kwargs={'post_id': post.id}),
+        )
+        comment = Comment.objects.get(pk=1)
+        self.assertIn(comment, response.context['post'].comments.all())
 
     def test_posts_user_can_follow(self):
         count = Follow.objects.count()

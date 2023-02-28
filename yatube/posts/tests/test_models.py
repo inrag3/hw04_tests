@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from ..models import Group, Post
+from ..models import Group, Post, Follow
 
 User = get_user_model()
 
@@ -10,6 +10,7 @@ class PostModelTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(username='auth')
+        cls.author = User.objects.create_user(username='author')
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='Тестовый слаг',
@@ -19,14 +20,20 @@ class PostModelTest(TestCase):
             author=cls.user,
             text='Тестовый пост',
         )
+        cls.follow = Follow.objects.create(
+            user=cls.user,
+            author=cls.author,
+        )
 
     def test_posts_models_have_correct_object_names(self):
         """Проверяем, что у моделей корректно работает __str__."""
         post = PostModelTest.post
         group = PostModelTest.group
+        follow = PostModelTest.follow
         object_names = {
             post.text[:15]: str(post),
             group.title: str(group),
+            f'{follow.user} is following {follow.author}': str(follow),
         }
         for value, expected_value in object_names.items():
             with self.subTest(value=value):
