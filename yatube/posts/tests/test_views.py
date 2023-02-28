@@ -1,6 +1,7 @@
 import shutil
 import tempfile
 
+from django.core.cache import cache
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from ..models import Group, Post, Follow, Comment
@@ -191,6 +192,20 @@ class PostViewTest(TestCase):
         )
         self.assertNotIn(PostViewTest.post, response.context['page_obj'])
         self.assertNotIn(post, response.context['page_obj'])
+
+    def test_posts_cache_for_index_page(self):
+        index_route = reverse('posts:index')
+        post = Post.objects.create(
+            author=PostViewTest.author,
+            text='Тестовый пост',
+        )
+        response = self.authorized_client.get(index_route)
+        post.delete()
+        response_2 = self.authorized_client.get(index_route)
+        self.assertEqual(response.content, response_2.content)
+        cache.clear()
+        response_3 = self.authorized_client.get(index_route)
+        self.assertNotEqual(response_2.content, response_3.content)
 
 
 class PaginatorViewsTest(TestCase):
